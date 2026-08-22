@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ads } from "@/data/ads";
+import { ads as staticAds } from "@/data/ads";
 
-export default function AdBanner() {
+export default function AdBanner({ ads: paidAds }) {
+  const ads = paidAds && paidAds.length > 0 ? paidAds : staticAds;
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
+    setIndex(0); // reset if the ad list itself changes (e.g. between country switches)
     if (ads.length <= 1) return;
     const timer = setInterval(() => setIndex((i) => (i + 1) % ads.length), 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [ads.length]);
 
   if (ads.length === 0) return null;
-  const ad = ads[index];
+  const ad = ads[index % ads.length];
 
   return (
     <div className="max-w-6xl mx-auto px-4 mt-6">

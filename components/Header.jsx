@@ -14,14 +14,17 @@ export default function Header() {
           <Suspense fallback={null}>
             <CountrySwitcher />
           </Suspense>
-          <Link href="/advertise" className="hover:underline hidden sm:inline">
-            Advertise
+          <Link href="/marketplace" className="hover:underline">
+            Marketplace
+          </Link>
+          <Link href="/add-business" className="hover:underline hidden sm:inline">
+            Add Business
           </Link>
           <Link
-            href="/add-business"
+            href="/sell"
             className="bg-white text-green-700 px-3 py-1.5 rounded-lg font-semibold hover:bg-green-50"
           >
-            + Add Business
+            + Sell a Product
           </Link>
         </nav>
       </div>

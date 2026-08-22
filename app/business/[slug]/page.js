@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { getSupabase } from "@/lib/supabase";
 import { getCountry } from "@/lib/countries";
 import { formatMoney, whatsappLink } from "@/lib/format";
@@ -8,7 +9,10 @@ import MapEmbed from "@/components/MapEmbed";
 
 export const revalidate = 60;
 
-async function getBusiness(slug) {
+// Wrapped in React's cache() so calling this twice in one request (once for
+// generateMetadata, once for the page body) only fetches — and counts a
+// view — once, not twice.
+const getBusiness = cache(async (slug) => {
   const supabase = getSupabase();
   const { data } = await supabase
     .from("businesses")
@@ -16,8 +20,15 @@ async function getBusiness(slug) {
     .eq("slug", slug)
     .eq("status", "approved")
     .single();
+  if (data) {
+    // Fire-and-forget view count — never let analytics tracking break the page.
+    supabase.rpc("increment_business_views", { business_slug: slug }).then(
+      () => {},
+      () => {}
+    );
+  }
   return data;
-}
+});
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;

@@ -1,0 +1,2 @@
+$env:SUPABASE_URL="https://jenzyxpwukdqpiqmzxwo.supabase.co"
+$env:SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Implbnp5eHB3dWtkcXBpcW16eHdvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4Njk3NzE2NiwiZXhwIjoyMTAyNTUzMTY2fQ.NysnkTvepeYzp-V8CpZhMrE1Cfja1GTo-jke6x_MpTs"
