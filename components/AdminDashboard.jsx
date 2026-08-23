@@ -26,6 +26,7 @@ export default function AdminDashboard() {
   const [selected, setSelected] = useState(new Set());
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [page, setPage] = useState(1);
+  const [approvedPage, setApprovedPage] = useState(1);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -128,7 +129,16 @@ export default function AdminDashboard() {
   const pageCount = Math.max(1, Math.ceil(filteredPending.length / PAGE_SIZE));
   const pagedPending = filteredPending.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  const approvedPageCount = Math.max(1, Math.ceil(approved.length / PAGE_SIZE));
+  const pagedApproved = approved.slice((approvedPage - 1) * PAGE_SIZE, approvedPage * PAGE_SIZE);
+
   useEffect(() => setPage(1), [categoryFilter]);
+  // Bulk-approving a category can suddenly change how many pages of live
+  // businesses exist — if the current page no longer exists, snap back to
+  // page 1 instead of showing a blank page.
+  useEffect(() => {
+    if (approvedPage > approvedPageCount) setApprovedPage(1);
+  }, [approvedPageCount, approvedPage]);
 
   function toggleSelected(slug) {
     setSelected((prev) => {
@@ -337,9 +347,11 @@ export default function AdminDashboard() {
       </section>
 
       <section>
-        <h2 className="text-lg font-bold mb-3">🟢 Live businesses ({approved.length})</h2>
+        <h2 className="text-lg font-bold mb-3">
+          🟢 Live businesses ({approved.length}) — page {approvedPage} of {approvedPageCount}
+        </h2>
         <div className="space-y-3">
-          {approved.map((b) => (
+          {pagedApproved.map((b) => (
             <div key={b.id} className="bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap items-center gap-3">
               {b.image_url ? (
                 <img src={b.image_url} alt="" className="h-12 w-12 rounded-lg object-cover" />
@@ -384,6 +396,27 @@ export default function AdminDashboard() {
             </div>
           ))}
         </div>
+        {approvedPageCount > 1 && (
+          <div className="flex items-center justify-center gap-3 mt-4 text-sm">
+            <button
+              disabled={approvedPage === 1}
+              onClick={() => setApprovedPage((p) => p - 1)}
+              className="border border-gray-300 rounded-lg px-3 py-1.5 disabled:opacity-40"
+            >
+              ← Prev
+            </button>
+            <span>
+              Page {approvedPage} of {approvedPageCount}
+            </span>
+            <button
+              disabled={approvedPage === approvedPageCount}
+              onClick={() => setApprovedPage((p) => p + 1)}
+              className="border border-gray-300 rounded-lg px-3 py-1.5 disabled:opacity-40"
+            >
+              Next →
+            </button>
+          </div>
+        )}
       </section>
 
       <section>
