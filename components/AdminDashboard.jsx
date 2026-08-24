@@ -12,7 +12,11 @@ const inputClass =
 const PAGE_SIZE = 50;
 
 export default function AdminDashboard() {
-  const supabase = getSupabase();
+  // Lazy initializer runs ONCE on mount, not on every render — this is the
+  // actual fix for the shaking/lag. Calling getSupabase() directly here
+  // (without useState) created a brand new client on every render, which
+  // cascaded into an infinite refetch-and-rerender loop.
+  const [supabase] = useState(() => getSupabase());
   const [checking, setChecking] = useState(true);
   const [session, setSession] = useState(null);
   const [email, setEmail] = useState("");
@@ -27,6 +31,8 @@ export default function AdminDashboard() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [page, setPage] = useState(1);
   const [approvedPage, setApprovedPage] = useState(1);
+  const [listingPage, setListingPage] = useState(1);
+  const [approvedListingPage, setApprovedListingPage] = useState(1);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -39,11 +45,13 @@ export default function AdminDashboard() {
   }, []);
 
   const load = useCallback(async () => {
+    // Cap rows to avoid fetching unbounded huge tables that hang the browser / system.
+    // 1000 rows per table is enough for admin work; use pagination for the UI.
     const [{ data: biz }, { data: list }, { data: adRows }, { data: pays }] = await Promise.all([
-      supabase.from("businesses").select("*, products(*)").order("created_at", { ascending: false }),
-      supabase.from("listings").select("*").order("created_at", { ascending: false }),
-      supabase.from("ads").select("*").order("created_at", { ascending: false }),
-      supabase.from("payments").select("*"),
+      supabase.from("businesses").select("*, products(*)").order("created_at", { ascending: false }).limit(1000),
+      supabase.from("listings").select("*").order("created_at", { ascending: false }).limit(1000),
+      supabase.from("ads").select("*").order("created_at", { ascending: false }).limit(500),
+      supabase.from("payments").select("*").limit(1000),
     ]);
     setBusinesses(biz ?? []);
     setListings(list ?? []);
@@ -127,10 +135,16 @@ export default function AdminDashboard() {
   );
 
   const pageCount = Math.max(1, Math.ceil(filteredPending.length / PAGE_SIZE));
-  const pagedPending = filteredPending.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pagedPending = useMemo(() => filteredPending.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [filteredPending, page]);
 
   const approvedPageCount = Math.max(1, Math.ceil(approved.length / PAGE_SIZE));
-  const pagedApproved = approved.slice((approvedPage - 1) * PAGE_SIZE, approvedPage * PAGE_SIZE);
+  const pagedApproved = useMemo(() => approved.slice((approvedPage - 1) * PAGE_SIZE, approvedPage * PAGE_SIZE), [approved, approvedPage]);
+
+  // Paginated slices for listings/ads – previously these rendered unbounded and hung the main thread
+  const pendingListingPageCount = Math.max(1, Math.ceil(pendingListings.length / PAGE_SIZE));
+  const pagedPendingListings = useMemo(() => pendingListings.slice((listingPage - 1) * PAGE_SIZE, listingPage * PAGE_SIZE), [pendingListings, listingPage]);
+  const approvedListingPageCount = Math.max(1, Math.ceil(approvedListings.length / PAGE_SIZE));
+  const pagedApprovedListings = useMemo(() => approvedListings.slice((approvedListingPage - 1) * PAGE_SIZE, approvedListingPage * PAGE_SIZE), [approvedListings, approvedListingPage]);
 
   useEffect(() => setPage(1), [categoryFilter]);
   // Bulk-approving a category can suddenly change how many pages of live
@@ -139,6 +153,12 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (approvedPage > approvedPageCount) setApprovedPage(1);
   }, [approvedPageCount, approvedPage]);
+  useEffect(() => {
+    if (listingPage > pendingListingPageCount) setListingPage(1);
+  }, [listingPage, pendingListingPageCount]);
+  useEffect(() => {
+    if (approvedListingPage > approvedListingPageCount) setApprovedListingPage(1);
+  }, [approvedListingPage, approvedListingPageCount]);
 
   function toggleSelected(slug) {
     setSelected((prev) => {
@@ -420,10 +440,10 @@ export default function AdminDashboard() {
       </section>
 
       <section>
-        <h2 className="text-lg font-bold mb-3">🛍️ Pending product listings ({pendingListings.length})</h2>
+        <h2 className="text-lg font-bold mb-3">🛍️ Pending product listings ({pendingListings.length}) — page {listingPage} of {pendingListingPageCount}</h2>
         {pendingListings.length === 0 && <p className="text-sm text-gray-500">Nothing waiting. 🎉</p>}
         <div className="space-y-3">
-          {pendingListings.map((l) => (
+          {pagedPendingListings.map((l) => (
             <div key={l.id} className="bg-white rounded-xl border border-gray-200 p-4">
               <div className="flex items-start gap-3">
                 {l.image_url && <img src={l.image_url} alt="" className="h-14 w-14 rounded-lg object-cover" />}
@@ -456,12 +476,19 @@ export default function AdminDashboard() {
             </div>
           ))}
         </div>
+        {pendingListingPageCount > 1 && (
+          <div className="flex items-center justify-center gap-3 mt-4 text-sm">
+            <button disabled={listingPage === 1} onClick={() => setListingPage((p) => p - 1)} className="border border-gray-300 rounded-lg px-3 py-1.5 disabled:opacity-40">← Prev</button>
+            <span>Page {listingPage} of {pendingListingPageCount}</span>
+            <button disabled={listingPage === pendingListingPageCount} onClick={() => setListingPage((p) => p + 1)} className="border border-gray-300 rounded-lg px-3 py-1.5 disabled:opacity-40">Next →</button>
+          </div>
+        )}
       </section>
 
       <section>
-        <h2 className="text-lg font-bold mb-3">🛍️ Live product listings ({approvedListings.length})</h2>
+        <h2 className="text-lg font-bold mb-3">🛍️ Live product listings ({approvedListings.length}) — page {approvedListingPage} of {approvedListingPageCount}</h2>
         <div className="space-y-3">
-          {approvedListings.map((l) => (
+          {pagedApprovedListings.map((l) => (
             <div key={l.id} className="bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap items-center gap-3">
               {l.image_url ? (
                 <img src={l.image_url} alt="" className="h-12 w-12 rounded-lg object-cover" />
@@ -497,6 +524,13 @@ export default function AdminDashboard() {
             </div>
           ))}
         </div>
+        {approvedListingPageCount > 1 && (
+          <div className="flex items-center justify-center gap-3 mt-4 text-sm">
+            <button disabled={approvedListingPage === 1} onClick={() => setApprovedListingPage((p) => p - 1)} className="border border-gray-300 rounded-lg px-3 py-1.5 disabled:opacity-40">← Prev</button>
+            <span>Page {approvedListingPage} of {approvedListingPageCount}</span>
+            <button disabled={approvedListingPage === approvedListingPageCount} onClick={() => setApprovedListingPage((p) => p + 1)} className="border border-gray-300 rounded-lg px-3 py-1.5 disabled:opacity-40">Next →</button>
+          </div>
+        )}
       </section>
 
       <section>

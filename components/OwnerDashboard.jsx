@@ -14,7 +14,9 @@ const STATUS_STYLES = {
 };
 
 export default function OwnerDashboard() {
-  const supabase = getSupabase();
+  // See AdminDashboard.jsx for why this must be useState(() => ...) and not
+  // a plain getSupabase() call — the latter caused an infinite refetch loop.
+  const [supabase] = useState(() => getSupabase());
   const [checking, setChecking] = useState(true);
   const [session, setSession] = useState(null);
   const [mode, setMode] = useState("login");

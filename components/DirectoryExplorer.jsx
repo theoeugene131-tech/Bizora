@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { categories } from "@/data/categories";
 import { getCountry } from "@/lib/countries";
 import BusinessCard from "./BusinessCard";
 
+const PAGE_SIZE = 24;
 export default function DirectoryExplorer({ businesses, countryCode }) {
   const country = getCountry(countryCode);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [region, setRegion] = useState("All regions");
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
@@ -26,6 +28,11 @@ export default function DirectoryExplorer({ businesses, countryCode }) {
       })
       .sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
   }, [businesses, query, category, region]);
+
+  // Reset page when filters change to avoid blank page
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paged = useMemo(() => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [filtered, page]);
+  useEffect(() => setPage(1), [query, category, region]);
 
   return (
     <section className="max-w-6xl mx-auto px-4 py-8">
@@ -59,7 +66,7 @@ export default function DirectoryExplorer({ businesses, countryCode }) {
         </select>
       </div>
 
-      <p className="text-sm text-gray-500 mb-4">{filtered.length} business(es) found</p>
+      <p className="text-sm text-gray-500 mb-4">{filtered.length} business(es) found — page {page} of {pageCount}</p>
 
       {filtered.length === 0 ? (
         <div className="text-center py-16 text-gray-500">
@@ -67,11 +74,20 @@ export default function DirectoryExplorer({ businesses, countryCode }) {
           <span className="text-green-700 font-medium">add your business free!</span>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map((b, i) => (
-            <BusinessCard key={b.id} business={b} index={i} currency={country.currency} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {paged.map((b, i) => (
+              <BusinessCard key={b.id} business={b} index={(page - 1) * PAGE_SIZE + i} currency={country.currency} />
+            ))}
+          </div>
+          {pageCount > 1 && (
+            <div className="flex items-center justify-center gap-3 mt-6 text-sm">
+              <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="border border-gray-300 rounded-lg px-3 py-1.5 disabled:opacity-40">← Prev</button>
+              <span>Page {page} of {pageCount}</span>
+              <button disabled={page === pageCount} onClick={() => setPage((p) => p + 1)} className="border border-gray-300 rounded-lg px-3 py-1.5 disabled:opacity-40">Next →</button>
+            </div>
+          )}
+        </>
       )}
     </section>
   );
