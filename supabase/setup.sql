@@ -43,7 +43,7 @@ create table if not exists payments (
 );
 
 create table if not exists admins (email text primary key);
-insert into admins (email) values ('YOUR_EMAIL@gmail.com') on conflict do nothing;
+insert into admins (email) values ('theoeugene131@gmail.com'), ('tnwokobia@gmail.com') on conflict do nothing;
 
 -- ================= SECURITY =================
 alter table businesses enable row level security;

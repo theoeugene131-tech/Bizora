@@ -158,7 +158,7 @@ async function fetchCityBusinesses(bbox) {
       try {
         const res = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "text/plain" },
+          headers: { "Content-Type": "text/plain", "User-Agent": "Bizora/1.0 (https://bizora-vert.vercel.app)" },
           body: query,
         });
 

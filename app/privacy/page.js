@@ -138,7 +138,9 @@ export default function PrivacyPage() {
         </p>
       </section>
 
-      <p className="text-gray-500">Questions or requests: {BRAND.supportEmail}</p>
+      <p className="text-gray-500">
+        Questions or requests: {BRAND.supportEmail} · Owned by {BRAND.owner} · WhatsApp {BRAND.whatsapp} · Nigeria bank {BRAND.bank.name} {BRAND.bank.account}
+      </p>
     </div>
   );
 }

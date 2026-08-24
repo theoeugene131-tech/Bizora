@@ -98,7 +98,26 @@ export default function TermsPage() {
         </p>
       </section>
 
-      <p className="text-gray-500">Questions: {BRAND.supportEmail}</p>
+      <section>
+        <h2 className="font-bold text-lg text-gray-900 mb-2">9. Ownership & contact</h2>
+        <p>
+          {BRAND.name} is owned and managed by <strong>{BRAND.owner}</strong>. To contact us send WhatsApp to{" "}
+          <a href={BRAND.whatsappLink} target="_blank" rel="noopener noreferrer" className="text-green-700 underline">
+            {BRAND.whatsapp}
+          </a>
+          .
+        </p>
+      </section>
+
+      <section>
+        <h2 className="font-bold text-lg text-gray-900 mb-2">10. Nigeria payments</h2>
+        <p>
+          All payments from Nigeria should go to <strong>{BRAND.bank.name} Ac {BRAND.bank.account} ({BRAND.bank.holder})</strong>. Platform fees via Paystack
+          are for advertising services only.
+        </p>
+      </section>
+
+      <p className="text-gray-500">Questions: {BRAND.supportEmail} · WhatsApp {BRAND.whatsapp}</p>
     </div>
   );
 }
