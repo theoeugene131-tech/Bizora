@@ -1,4 +1,5 @@
 import AdBanner from "@/components/AdBanner";
+import AppShareButtons from "@/components/AppShareButtons";
 import DirectoryExplorer from "@/components/DirectoryExplorer";
 import { getSupabase } from "@/lib/supabase";
 import { getCountry } from "@/lib/countries";
@@ -31,6 +32,7 @@ export default async function Home({ searchParams }) {
             Find trusted businesses across {country.label} {country.flag}
           </h1>
           <p className="mt-3 text-green-100">Browse addresses, products and services near you.</p>
+          <AppShareButtons variant="hero" />
         </div>
       </section>
       <AdBanner />

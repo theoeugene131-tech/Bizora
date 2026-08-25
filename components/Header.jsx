@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import Logo from "./Logo";
 import CountrySwitcher from "./CountrySwitcher";
+import AppShareButtons from "./AppShareButtons";
 
 export default function Header() {
   return (
@@ -14,6 +15,7 @@ export default function Header() {
           <Suspense fallback={null}>
             <CountrySwitcher />
           </Suspense>
+          <AppShareButtons variant="header" />
           <Link href="/marketplace" className="hover:underline">
             Marketplace
           </Link>
