@@ -14,14 +14,17 @@ export default function DirectoryExplorer({ businesses, countryCode }) {
   const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
-    const q = query.toLowerCase();
+    const q = query.toLowerCase().trim();
     return businesses
       .filter((b) => {
         const matchesQuery =
           !q ||
           b.name.toLowerCase().includes(q) ||
           (b.description ?? "").toLowerCase().includes(q) ||
-          b.category.toLowerCase().includes(q);
+          b.category.toLowerCase().includes(q) ||
+          b.city.toLowerCase().includes(q) ||
+          b.state.toLowerCase().includes(q) ||
+          (b.products ?? []).some((p) => p.name.toLowerCase().includes(q) || String(p.price).includes(q));
         const matchesCategory = category === "All" || b.category === category;
         const matchesRegion = region === "All regions" || b.state === region;
         return matchesQuery && matchesCategory && matchesRegion;
@@ -41,7 +44,8 @@ export default function DirectoryExplorer({ businesses, countryCode }) {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search businesses..."
+          placeholder="Search businesses or products..."
+          aria-label="Search businesses or products"
           className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-600"
         />
         <select

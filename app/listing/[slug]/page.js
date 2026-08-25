@@ -67,8 +67,19 @@ export default async function ListingPage({ params }) {
   const featured = listing.is_featured && (!listing.featured_until || new Date(listing.featured_until) > new Date());
   const shareUrl = `${process.env.SITE_URL ?? "http://localhost:3000"}/listing/${listing.slug}`;
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: listing.title,
+    description: listing.description,
+    image: listing.image_url,
+    category: listing.category,
+    offers: { "@type": "Offer", price: String(listing.price), priceCurrency: country.currency || "NGN", availability: "https://schema.org/InStock" },
+    brand: { "@type": "Organization", name: BRAND.owner },
+  };
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
       <Link href="/marketplace" className="text-green-700 text-sm">
         ← Back to marketplace
       </Link>

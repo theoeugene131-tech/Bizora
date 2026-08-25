@@ -33,7 +33,26 @@ const getBusiness = cache(async (slug) => {
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const business = await getBusiness(slug);
-  return { title: business ? `${business.name} — ${BRAND.name}` : "Business not found" };
+  if (!business) return { title: "Business not found" };
+  const siteUrl = process.env.SITE_URL ?? "https://bizora-vert.vercel.app";
+  const url = `${siteUrl}/business/${business.slug}`;
+  const productNames = (business.products ?? []).slice(0,5).map(p=>p.name).join(", ");
+  const description = business.description?.slice(0,155) || `${business.name} in ${business.city}, ${business.state} — ${business.category}${productNames ? ` · Products: ${productNames}` : ""}. Find address, phone, map and products on ${BRAND.name}, owned by ${BRAND.owner}.`;
+  return {
+    title: `${business.name} — ${business.category} in ${business.city} — ${BRAND.name}`,
+    description,
+    keywords: [business.name, business.category, business.city, business.state, ...(business.products??[]).map(p=>p.name)].filter(Boolean),
+    alternates: { canonical: url },
+    openGraph: {
+      title: business.name,
+      description,
+      url,
+      siteName: BRAND.name,
+      type: "website",
+      images: business.image_url ? [{ url: business.image_url }] : [],
+    },
+    twitter: { card: "summary_large_image", title: business.name, description, images: business.image_url ? [business.image_url] : [] },
+  };
 }
 
 export default async function BusinessPage({ params }) {
@@ -52,8 +71,30 @@ export default async function BusinessPage({ params }) {
       ? { lat: business.lat, lng: business.lng }
       : undefined;
 
+  const siteUrl = process.env.SITE_URL ?? "https://bizora-vert.vercel.app";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: business.name,
+    description: business.description,
+    image: business.image_url,
+    address: { "@type": "PostalAddress", streetAddress: business.street, addressLocality: business.city, addressRegion: business.state, addressCountry: business.country?.toUpperCase() || "NG" },
+    geo: location ? { "@type": "GeoCoordinates", latitude: location.lat, longitude: location.lng } : undefined,
+    telephone: business.phone,
+    email: business.email,
+    url: `${siteUrl}/business/${business.slug}`,
+    parentOrganization: { "@type": "Organization", name: BRAND.owner },
+  };
+  const productJsonLd = business.products?.length ? {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: business.products.slice(0,10).map((p,i)=>({ "@type":"ListItem", position:i+1, item: { "@type":"Product", name: p.name, offers: { "@type":"Offer", price: String(p.price), priceCurrency: country.currency || "NGN" } } }))
+  } : null;
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {productJsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />}
       <Link href="/" className="text-green-700 text-sm">← Back to directory</Link>
 
       <div className="mt-4 bg-white rounded-xl border border-gray-200 p-6">
