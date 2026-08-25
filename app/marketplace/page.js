@@ -12,21 +12,23 @@ export default async function MarketplacePage({ searchParams }) {
 
   const supabase = getSupabase();
   const nowIso = new Date().toISOString();
-  const { data } = await supabase
-    .from("listings")
-    .select("*")
-    .eq("status", "approved")
-    .eq("country", country.code)
-    // Free listings (paid_until is null) always show. Paid listings only
-    // show while their 30-day period hasn't lapsed — this is what makes
-    // the ₦5,000 listing fee an actual monthly charge instead of one-time.
-    .or(`paid_until.is.null,paid_until.gt.${nowIso}`)
-    .order("created_at", { ascending: false });
+  const [{ data }, { data: bizData }] = await Promise.all([
+    supabase
+      .from("listings")
+      .select("*")
+      .eq("status", "approved")
+      .eq("country", country.code)
+      .or(`paid_until.is.null,paid_until.gt.${nowIso}`)
+      .order("created_at", { ascending: false })
+      .limit(1000),
+    supabase.from("businesses").select("*, products(*)").eq("status", "approved").eq("country", country.code).order("created_at", { ascending: false }).limit(1000),
+  ]);
 
   const listings = (data ?? []).map((l) => ({
     ...l,
     is_featured: l.is_featured && (!l.featured_until || new Date(l.featured_until) > new Date()),
   }));
+  const businesses = (bizData ?? []).map((b) => ({ ...b, featured: b.is_featured && (!b.featured_until || new Date(b.featured_until) > new Date()) }));
 
   return (
     <>
@@ -38,7 +40,7 @@ export default async function MarketplacePage({ searchParams }) {
           <p className="mt-3 text-green-100">Phones, electronics, fashion and more — straight from sellers near you.</p>
         </div>
       </section>
-      <MarketplaceExplorer listings={listings} countryCode={country.code} />
+      <MarketplaceExplorer listings={listings} businesses={businesses} countryCode={country.code} />
     </>
   );
 }
