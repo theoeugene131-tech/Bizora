@@ -36,21 +36,23 @@ export default function ShareButtons({ url, title }) {
   const twitterHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <span className="text-sm font-medium text-gray-600">Share:</span>
+    <div className="bg-gradient-to-r from-yellow-50 to-green-50 border-2 border-yellow-300 rounded-xl p-4 flex flex-wrap items-center gap-3 shadow-sm">
+      <span className="text-sm font-bold text-gray-800 flex items-center gap-1.5">📤 Share this:</span>
       <a
         href={whatsappHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="bg-green-500 text-white text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-green-600"
+        className="bg-green-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-green-700 shadow-sm flex items-center gap-1.5"
+        aria-label="Share on WhatsApp"
       >
-        WhatsApp
+        <span>💬</span> WhatsApp
       </a>
       <a
         href={facebookHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="bg-blue-600 text-white text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700"
+        className="bg-blue-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-blue-700 shadow-sm"
+        aria-label="Share on Facebook"
       >
         Facebook
       </a>
@@ -58,22 +60,23 @@ export default function ShareButtons({ url, title }) {
         href={twitterHref}
         target="_blank"
         rel="noopener noreferrer"
-        className="bg-black text-white text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-800"
+        className="bg-black text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-gray-800 shadow-sm"
+        aria-label="Share on X"
       >
         X
       </a>
       <button
         onClick={copyLink}
-        className="border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-50"
+        className="bg-white border-2 border-gray-300 text-gray-800 text-sm font-bold px-4 py-2 rounded-lg hover:bg-gray-50 shadow-sm"
       >
-        {copied ? "✔ Copied!" : "Copy link"}
+        {copied ? "✔ Copied!" : "🔗 Copy link"}
       </button>
       {canNativeShare && (
         <button
           onClick={nativeShare}
-          className="border border-gray-300 text-gray-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-gray-50"
+          className="bg-white border-2 border-gray-300 text-gray-800 text-sm font-bold px-4 py-2 rounded-lg hover:bg-gray-50 shadow-sm"
         >
-          More…
+          📱 More…
         </button>
       )}
     </div>

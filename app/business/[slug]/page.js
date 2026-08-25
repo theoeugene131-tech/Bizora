@@ -6,6 +6,7 @@ import { getCountry } from "@/lib/countries";
 import { formatMoney, whatsappLink } from "@/lib/format";
 import { BRAND } from "@/lib/brand";
 import MapEmbed from "@/components/MapEmbed";
+import ShareButtons from "@/components/ShareButtons";
 
 export const revalidate = 60;
 
@@ -72,6 +73,7 @@ export default async function BusinessPage({ params }) {
       : undefined;
 
   const siteUrl = process.env.SITE_URL ?? "https://bizora-vert.vercel.app";
+  const shareUrl = `${siteUrl}/business/${business.slug}`;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -109,6 +111,10 @@ export default async function BusinessPage({ params }) {
         </div>
 
         <p className="mt-4 text-gray-700">{business.description}</p>
+
+        <div className="mt-6">
+          <ShareButtons url={shareUrl} title={business.name} />
+        </div>
 
         <div className="mt-6 grid sm:grid-cols-2 gap-4 text-sm">
           <div>
@@ -160,6 +166,10 @@ export default async function BusinessPage({ params }) {
             <p className="text-green-700 font-bold mt-1">{formatMoney(Number(p.price), country.currency)}</p>
           </div>
         ))}
+      </div>
+
+      <div className="mt-8">
+        <ShareButtons url={shareUrl} title={`${business.name} on ${BRAND.name}`} />
       </div>
 
       <p className="text-xs text-gray-400 mt-6">
